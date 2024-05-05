@@ -87,14 +87,14 @@ void writeECLgraph(const ECLgraph g, const char* const fname)
   fclose(f);
 }
 
-void freeECLgraph(ECLgraph &g)
+void freeECLgraph(ECLgraph *g)
 {
-  if (g.nindex != NULL) free(g.nindex);
-  if (g.nlist != NULL) free(g.nlist);
-  if (g.eweight != NULL) free(g.eweight);
-  g.nindex = NULL;
-  g.nlist = NULL;
-  g.eweight = NULL;
+  if (g->nindex != NULL) free(g->nindex);
+  if (g->nlist != NULL) free(g->nlist);
+  if (g->eweight != NULL) free(g->eweight);
+  g->nindex = NULL;
+  g->nlist = NULL;
+  g->eweight = NULL;
 }
 
 #endif

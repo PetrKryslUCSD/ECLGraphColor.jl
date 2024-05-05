@@ -295,7 +295,7 @@ extern "C"
 {
     
 
-    int run(ECLgraph g, int threads)
+    int run_graph_coloring(ECLgraph *g, int threads)
     {
         printf("ECL-GC OpenMP v1.2 (%s)\n", __FILE__);
         printf("Copyright 2020 Texas State University\n\n");
@@ -306,39 +306,39 @@ extern "C"
             exit(-1);
         }
 
-        printf("nodes: %d\n", g.nodes);
-        printf("edges: %d\n", g.edges);
-        printf("avg degree: %.2f\n", 1.0 * g.edges / g.nodes);
+        printf("nodes: %d\n", g->nodes);
+        printf("edges: %d\n", g->edges);
+        printf("avg degree: %.2f\n", 1.0 * g->edges / g->nodes);
 
-        int *const color = new int[g.nodes];
-        int *const nlist2 = new int[g.edges];
-        int *const posscol = new int[g.nodes];
-        int *const posscol2 = new int[g.edges / BPI + 1];
-        int *const wl = new int[g.nodes];
+        int *const color = new int[g->nodes];
+        int *const nlist2 = new int[g->edges];
+        int *const posscol = new int[g->nodes];
+        int *const posscol2 = new int[g->edges / BPI + 1];
+        int *const wl = new int[g->nodes];
 
         CPUTimer timer;
         timer.start();
-        const int wlsize = init(g.nodes, g.edges, g.nindex, g.nlist, nlist2, posscol, posscol2, color, wl, threads);
-        runLarge(g.nindex, nlist2, posscol, posscol2, color, wl, wlsize, threads);
-        runSmall(g.nodes, g.nindex, g.nlist, posscol, color, threads);
+        const int wlsize = init(g->nodes, g->edges, g->nindex, g->nlist, nlist2, posscol, posscol2, color, wl, threads);
+        runLarge(g->nindex, nlist2, posscol, posscol2, color, wl, wlsize, threads);
+        runSmall(g->nodes, g->nindex, g->nlist, posscol, color, threads);
         const float runtime = timer.stop();
 
         printf("runtime:    %.6f s\n", runtime);
-        printf("throughput: %.6f Mnodes/s\n", g.nodes * 0.000001 / runtime);
-        printf("throughput: %.6f Medges/s\n", g.edges * 0.000001 / runtime);
+        printf("throughput: %.6f Mnodes/s\n", g->nodes * 0.000001 / runtime);
+        printf("throughput: %.6f Medges/s\n", g->edges * 0.000001 / runtime);
 
-        for (int v = 0; v < g.nodes; v++)
+        for (int v = 0; v < g->nodes; v++)
         {
             if (color[v] < 0)
             {
-                printf("ERROR: found unprocessed node in graph (node %d with deg %d)\n\n", v, g.nindex[v + 1] - g.nindex[v]);
+                printf("ERROR: found unprocessed node in graph (node %d with deg %d)\n\n", v, g->nindex[v + 1] - g->nindex[v]);
                 exit(-1);
             }
-            for (int i = g.nindex[v]; i < g.nindex[v + 1]; i++)
+            for (int i = g->nindex[v]; i < g->nindex[v + 1]; i++)
             {
-                if (color[g.nlist[i]] == color[v])
+                if (color[g->nlist[i]] == color[v])
                 {
-                    printf("ERROR: found adjacent nodes with same color %d (%d %d)\n\n", color[v], v, g.nlist[i]);
+                    printf("ERROR: found adjacent nodes with same color %d (%d %d)\n\n", color[v], v, g->nlist[i]);
                     exit(-1);
                 }
             }
@@ -350,7 +350,7 @@ extern "C"
         for (int i = 0; i < vals; i++)
             c[i] = 0;
         int cols = -1;
-        for (int v = 0; v < g.nodes; v++)
+        for (int v = 0; v < g->nodes; v++)
         {
             cols = std::max(cols, color[v]);
             if (color[v] < vals)
@@ -363,7 +363,7 @@ extern "C"
         for (int i = 0; i < std::min(vals, cols); i++)
         {
             sum += c[i];
-            printf("col %2d: %10d (%5.1f%%)\n", i, c[i], 100.0 * sum / g.nodes);
+            printf("col %2d: %10d (%5.1f%%)\n", i, c[i], 100.0 * sum / g->nodes);
         }
 
         // delete[] color;
@@ -377,24 +377,72 @@ extern "C"
 
     
 
-    ECLgraph make_graph(const int nodes, const int edges)
+    ECLgraph *make_graph(int nodes, int edges)
     {
-        ECLgraph g;
-        g.nodes = nodes;
-        g.edges = edges;
-        if ((g.nodes < 1) || (g.edges < 0))
+        ECLgraph *g = (ECLgraph *)malloc(sizeof(ECLgraph));
+        g->nodes = nodes;
+        g->edges = edges;
+        if ((g->nodes < 1) || (g->edges < 0))
         {
             fprintf(stderr, "ERROR: node or edge count too low\n\n");
         }
-        g.nindex = (int *)malloc((g.nodes + 1) * sizeof(g.nindex[0]));
-        g.nlist = (int *)malloc(g.edges * sizeof(g.nlist[0]));
-        g.eweight = (int *)malloc(g.edges * sizeof(g.eweight[0]));
-        if ((g.nindex == NULL) || (g.nlist == NULL) || (g.eweight == NULL))
+        g->nindex = (int *)malloc((g->nodes + 1) * sizeof(g->nindex[0]));
+        g->nlist = (int *)malloc(g->edges * sizeof(g->nlist[0]));
+        g->eweight = (int *)malloc(g->edges * sizeof(g->eweight[0]));
+        if ((g->nindex == NULL) || (g->nlist == NULL) || (g->eweight == NULL))
         {
             fprintf(stderr, "ERROR: memory allocation failed\n\n");
             exit(-1);
         }
         return g;
+    }
+
+    // Inside this function we assume 0-based indexing
+    void add_nlist(ECLgraph *g, int row, int serialnum, int neighbor)
+    {
+        row = row - 1;
+        serialnum = serialnum - 1;
+        neighbor = neighbor - 1;
+        if (g->nindex == (void *)0)
+        {
+            fprintf(stderr, "ERROR: no indexes\n\n");
+        }
+        else
+        {
+            if ((g->nindex[row] < 0) || (g->nindex[row] >= g->edges))
+            {
+                fprintf(stderr, "ERROR: wrong pointer to the row\n\n");
+            }
+            else
+            {
+                int i = g->nindex[row] + serialnum;
+                g->nlist[i] = neighbor;
+                g->eweight[i] = 1;
+            }
+        }
+    }
+
+    // Inside this function we assume 0-based indexing
+    void add_nindex(ECLgraph *g, int row, int idx)
+    {
+        row = row - 1;
+        idx = idx - 1;
+        if ((row < 0) || (row >= g->nodes+1))
+        {
+            fprintf(stderr, "ERROR: row number out of range\n\n");
+        }
+        else
+        {
+            g->nindex[row] = idx;
+        }
+    }
+
+    void free_graph(ECLgraph *g)
+    {
+        free(g->nindex);
+        free(g->nlist);
+        free(g->eweight);
+        free(g);
     }
 
 } // extern "C"
