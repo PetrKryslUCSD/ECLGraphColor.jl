@@ -46,6 +46,11 @@ function test()
 
     true
 end
-test()
+if (!Base.Sys.islinux())
+    @warn "Architecture not supported (so far only Linux)."
+else
+    test()
+end
+
 nothing
 end
