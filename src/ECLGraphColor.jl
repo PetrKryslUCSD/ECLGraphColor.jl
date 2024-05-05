@@ -8,8 +8,6 @@ __precompile__(false) #
 const _LIBDIR = joinpath(@__DIR__, "..", "deps")
 const _LIB = dlopen(joinpath(_LIBDIR, "ecl-gc") * ".so")
 
-@show _LIB
-
 struct PECLgraph
     p::Ptr{Cvoid}
 end
