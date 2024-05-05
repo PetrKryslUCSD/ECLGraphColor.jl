@@ -365,12 +365,15 @@ extern "C"
             sum += c[i];
             printf("col %2d: %10d (%5.1f%%)\n", i, c[i], 100.0 * sum / g->nodes);
         }
+        
+        // Save the results in the graph structure
+        g->color = color;
 
         // delete[] color;
-        // delete[] nlist2;
-        // delete[] posscol;
-        // delete[] posscol2;
-        // delete[] wl;
+        delete[] nlist2;
+        delete[] posscol;
+        delete[] posscol2;
+        delete[] wl;
         // freeECLgraph(g);
         return 0;
     }
@@ -394,9 +397,11 @@ extern "C"
             fprintf(stderr, "ERROR: memory allocation failed\n\n");
             exit(-1);
         }
+        g->color = (int *)0;
         return g;
     }
 
+    // The numbers are 1-based
     // Inside this function we assume 0-based indexing
     void add_nlist(ECLgraph *g, int row, int serialnum, int neighbor)
     {
@@ -422,6 +427,7 @@ extern "C"
         }
     }
 
+    // The numbers of the rows and indexes are 1-based
     // Inside this function we assume 0-based indexing
     void add_nindex(ECLgraph *g, int row, int idx)
     {
@@ -435,6 +441,30 @@ extern "C"
         {
             g->nindex[row] = idx;
         }
+    }
+
+    // The numbers of the rows are 1-based
+    // Inside this function we assume 0-based indexing
+    // The returned color is 1-based
+    int get_color(ECLgraph *g, int row)
+    {
+        row = row - 1;
+        if (g->color == (void *)0)
+        {
+            fprintf(stderr, "ERROR: no color\n\n");
+        }
+        else
+        {
+            if ((row < 0) || (row >= g->nodes))
+            {
+                fprintf(stderr, "ERROR: row number out of range\n\n");                
+            }
+            else
+            {
+                return g->color[row] + 1;
+            }
+        }
+        return -1;
     }
 
     void free_graph(ECLgraph *g)
