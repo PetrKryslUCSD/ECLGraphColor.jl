@@ -295,10 +295,12 @@ extern "C"
 {
     
 
-    int run_graph_coloring(ECLgraph *g, int threads)
+    int run_graph_coloring(ECLgraph *g, int threads, int test, int verbose)
     {
-        printf("ECL-GC OpenMP v1.2 (%s)\n", __FILE__);
-        printf("Copyright 2020 Texas State University\n\n");
+        if (verbose){
+            printf("ECL-GC OpenMP v1.2 (%s)\n", __FILE__);
+            printf("Copyright 2020 Texas State University\n\n");
+        }
 
         if (BPI != sizeof(int) * 8)
         {
@@ -306,9 +308,12 @@ extern "C"
             exit(-1);
         }
 
-        printf("nodes: %d\n", g->nodes);
-        printf("edges: %d\n", g->edges);
-        printf("avg degree: %.2f\n", 1.0 * g->edges / g->nodes);
+        if (verbose)
+        {
+            printf("nodes: %d\n", g->nodes);
+            printf("edges: %d\n", g->edges);
+            printf("avg degree: %.2f\n", 1.0 * g->edges / g->nodes);
+        }
 
         int *const color = new int[g->nodes];
         int *const nlist2 = new int[g->edges];
@@ -323,49 +328,59 @@ extern "C"
         runSmall(g->nodes, g->nindex, g->nlist, posscol, color, threads);
         const float runtime = timer.stop();
 
-        printf("runtime:    %.6f s\n", runtime);
-        printf("throughput: %.6f Mnodes/s\n", g->nodes * 0.000001 / runtime);
-        printf("throughput: %.6f Medges/s\n", g->edges * 0.000001 / runtime);
-
-        for (int v = 0; v < g->nodes; v++)
+        if (verbose)
         {
-            if (color[v] < 0)
+            printf("runtime:    %.6f s\n", runtime);
+            printf("throughput: %.6f Mnodes/s\n", g->nodes * 0.000001 / runtime);
+            printf("throughput: %.6f Medges/s\n", g->edges * 0.000001 / runtime);
+        }
+
+        if (test)
+        {
+            for (int v = 0; v < g->nodes; v++)
             {
-                printf("ERROR: found unprocessed node in graph (node %d with deg %d)\n\n", v, g->nindex[v + 1] - g->nindex[v]);
-                exit(-1);
-            }
-            for (int i = g->nindex[v]; i < g->nindex[v + 1]; i++)
-            {
-                if (color[g->nlist[i]] == color[v])
+                if (color[v] < 0)
                 {
-                    printf("ERROR: found adjacent nodes with same color %d (%d %d)\n\n", color[v], v, g->nlist[i]);
+                    printf("ERROR: found unprocessed node in graph (node %d with deg %d)\n\n", v, g->nindex[v + 1] - g->nindex[v]);
                     exit(-1);
                 }
+                for (int i = g->nindex[v]; i < g->nindex[v + 1]; i++)
+                {
+                    if (color[g->nlist[i]] == color[v])
+                    {
+                        printf("ERROR: found adjacent nodes with same color %d (%d %d)\n\n", color[v], v, g->nlist[i]);
+                        exit(-1);
+                    }
+                }
+            }
+            if (verbose)
+                printf("result verification passed\n");
+        }
+
+        if (verbose)
+        {
+            const int vals = 16;
+            int c[vals];
+            for (int i = 0; i < vals; i++)
+                c[i] = 0;
+            int cols = -1;
+            for (int v = 0; v < g->nodes; v++)
+            {
+                cols = std::max(cols, color[v]);
+                if (color[v] < vals)
+                    c[color[v]]++;
+            }
+            cols++;
+            printf("colors used: %d\n", cols);
+
+            int sum = 0;
+            for (int i = 0; i < std::min(vals, cols); i++)
+            {
+                sum += c[i];
+                printf("col %2d: %10d (%5.1f%%)\n", i, c[i], 100.0 * sum / g->nodes);
             }
         }
-        printf("result verification passed\n");
 
-        const int vals = 16;
-        int c[vals];
-        for (int i = 0; i < vals; i++)
-            c[i] = 0;
-        int cols = -1;
-        for (int v = 0; v < g->nodes; v++)
-        {
-            cols = std::max(cols, color[v]);
-            if (color[v] < vals)
-                c[color[v]]++;
-        }
-        cols++;
-        printf("colors used: %d\n", cols);
-
-        int sum = 0;
-        for (int i = 0; i < std::min(vals, cols); i++)
-        {
-            sum += c[i];
-            printf("col %2d: %10d (%5.1f%%)\n", i, c[i], 100.0 * sum / g->nodes);
-        }
-        
         // Save the results in the graph structure
         g->color = color;
 

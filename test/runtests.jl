@@ -18,23 +18,32 @@ function test()
 
     g = make_graph(length(crs), sum([length(c) for c in crs]))
     idx = 1
-    for i in 1:length(crs)
+    for i in eachindex(crs)
         add_nindex(g, i, idx)
         idx += length(crs[i])
     end
     add_nindex(g, length(crs)+1, idx)
-    for i in 1:length(crs)
-        for j in 1:length(crs[i])
+    for i in eachindex(crs)
+        for j in eachindex(crs[i])
             add_nlist(g, i, j, crs[i][j])
         end
     end
     print_graph(g)
     run_graph_coloring(g, 4)
+    shouldget = [
+        3
+        4
+        3
+        1
+        2
+        4
+        1]
     for i in 1:length(crs)
-        @show get_color(g, i)
+        @test get_color(g, i) == shouldget[i]
     end
+    
+    free_graph(g)
 
-    @test 1 == 1
     true
 end
 test()

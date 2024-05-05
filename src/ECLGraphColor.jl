@@ -40,11 +40,11 @@ function get_color(g::PECLgraph, row::T) where {T}
         g.p, row)
 end
 
-function run_graph_coloring(g::PECLgraph, threads::T) where {T}
+function run_graph_coloring(g::PECLgraph, threads::T, test::T = 0, verbose::T = 0) where {T}
     return ccall(dlsym(_LIB, :run_graph_coloring),
         Cvoid,
-        (Ptr{Cvoid}, Cint,),
-        g.p, threads)
+        (Ptr{Cvoid}, Cint, Cint, Cint,),
+        g.p, threads, test, verbose)
 end
 
 function print_graph(g::PECLgraph) 
