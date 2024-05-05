@@ -40,6 +40,7 @@ struct ECLgraph {
   int* nindex;
   int* nlist;
   int* eweight;
+  int* color;
 };
 
 ECLgraph readECLgraph(const char* const fname)
@@ -67,6 +68,7 @@ ECLgraph readECLgraph(const char* const fname)
     if (cnt != g.edges) {fprintf(stderr, "ERROR: failed to read edge weights\n\n");  exit(-1);}
   }
   fclose(f);
+  g.color = (int*)malloc(g.nodes * sizeof(g.color[0]));
 
   return g;
 }

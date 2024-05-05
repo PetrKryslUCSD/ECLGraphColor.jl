@@ -28,6 +28,13 @@ function add_nindex(g::PECLgraph, row::T, idx::T) where {T}
         g.p, row, idx)
 end
 
+function get_color(g::PECLgraph, row::T) where {T}
+    return ccall(dlsym(_LIB, :get_color),
+        Cint,
+        (Ptr{Cvoid}, Cint),
+        g.p, row)
+end
+
 function run_graph_coloring(g::PECLgraph, threads::T) where {T}
     return ccall(dlsym(_LIB, :run_graph_coloring),
         Cvoid,
@@ -45,13 +52,20 @@ end
 A, B, C, D, E, F, G = 1, 2, 3, 4, 5, 6, 7
 
 crs = fill([], 7)
-crs[A] =  [A, B, D, F, G, E]
-crs[B] =  [B, A, D, C, E, G]
-crs[C] =  [C, G, B, D, E, F]
-crs[D] =  [D, A, F, E, C, B]
-crs[E] =  [E, D, F, C, B, A]
-crs[F] =  [F, D, E, C, A]
-crs[G] =  [G, B, C, A]
+# crs[A] =  [A, B, D, F, G, E]
+# crs[B] =  [B, A, D, C, E, G]
+# crs[C] =  [C, G, B, D, E, F]
+# crs[D] =  [D, A, F, E, C, B]
+# crs[E] =  [E, D, F, C, B, A]
+# crs[F] =  [F, D, E, C, A]
+# crs[G] =  [G, B, C, A]
+crs[A] =  [B, D, F, G, E]
+crs[B] =  [A, D, C, E, G]
+crs[C] =  [G, B, D, E, F]
+crs[D] =  [A, F, E, C, B]
+crs[E] =  [D, F, C, B, A]
+crs[F] =  [D, E, C, A]
+crs[G] =  [B, C, A]
 
 let
     g = make_graph(length(crs), sum([length(c) for c in crs]))
@@ -65,9 +79,13 @@ let
             add_nlist(g, i, j, crs[i][j])
         end
     end
+    run_graph_coloring(g, 4)
+    for i in 1:length(crs)
+        @show get_color(g, i)
+    end
 end
 
-# run_graph_coloring(g, 4)
+
 # free_graph(g)
 
 # dlclose(_LIB)
