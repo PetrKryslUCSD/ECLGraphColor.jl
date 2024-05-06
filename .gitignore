@@ -24,3 +24,7 @@ docs/site/
 Manifest.toml
 
 *.so
+*.egr
+ecl-gc
+settings.json
+
