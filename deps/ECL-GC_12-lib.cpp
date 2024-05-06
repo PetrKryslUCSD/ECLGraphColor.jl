@@ -506,6 +506,11 @@ extern "C"
         writeECLgraph(*g, fname);
     }
 
+    ECLgraph *read_graph(char fname[])
+    {
+        return readECLgraph(fname);
+    }
+
     void free_graph(ECLgraph *g)
     {
         free(g->nindex);

@@ -68,6 +68,13 @@ if (Base.Sys.islinux())
             g.p, fname)
     end
 
+    function read_graph(fname::String) 
+        return PECLgraph(ccall(dlsym(_LIB, :read_graph),
+            Ptr{Cvoid},
+            (Cstring, ),
+            fname))
+    end
+
     function free_graph(g::PECLgraph)
         return ccall(dlsym(_LIB, :free_graph),
             Cvoid,

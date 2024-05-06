@@ -1,7 +1,8 @@
 module mbas001
 using Test
 using ECLGraphColor: PECLgraph, make_graph, add_nlist, add_nindex
-using ECLGraphColor: get_color, run_graph_coloring, free_graph, print_graph, write_graph
+using ECLGraphColor: get_color, run_graph_coloring, free_graph
+using ECLGraphColor: print_graph, write_graph, read_graph
 function test()
     A, B, C, D, E, F, G = 1, 2, 3, 4, 5, 6, 7
     crs = fill([], 7)
@@ -29,7 +30,7 @@ function test()
         end
     end
     print_graph(g)
-    run_graph_coloring(g, 4)
+    run_graph_coloring(g, 4, 1, 1)
     shouldget = [
         3
         4
@@ -43,6 +44,9 @@ function test()
     end
 
     write_graph(g, "testgraph.egr")
+
+    g = read_graph("testgraph.egr")
+    run_graph_coloring(g, 4, 1, 1)
     
     free_graph(g)
 

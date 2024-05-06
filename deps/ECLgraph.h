@@ -43,32 +43,77 @@ struct ECLgraph {
   int* color;
 };
 
-ECLgraph readECLgraph(const char* const fname)
+ECLgraph *readECLgraph(const char *const fname)
 {
-  ECLgraph g;
+  ECLgraph *g = (ECLgraph *)malloc(sizeof(ECLgraph));
   int cnt;
 
-  FILE* f = fopen(fname, "rb");  if (f == NULL) {fprintf(stderr, "ERROR: could not open file %s\n\n", fname);  exit(-1);}
-  cnt = fread(&g.nodes, sizeof(g.nodes), 1, f);  if (cnt != 1) {fprintf(stderr, "ERROR: failed to read nodes\n\n");  exit(-1);}
-  cnt = fread(&g.edges, sizeof(g.edges), 1, f);  if (cnt != 1) {fprintf(stderr, "ERROR: failed to read edges\n\n");  exit(-1);}
-  if ((g.nodes < 1) || (g.edges < 0)) {fprintf(stderr, "ERROR: node or edge count too low\n\n");  exit(-1);}
+  if (g == NULL)
+  {
+    fprintf(stderr, "ERROR: could not allocate graph\n\n");
+    exit(-1);
+  }
+  FILE *f = fopen(fname, "rb");
+  if (f == NULL)
+  {
+    fprintf(stderr, "ERROR: could not open file %s\n\n", fname);
+    exit(-1);
+  }
+  cnt = fread(&g->nodes, sizeof(g->nodes), 1, f);
+  if (cnt != 1)
+  {
+    fprintf(stderr, "ERROR: failed to read nodes\n\n");
+    exit(-1);
+  }
+  cnt = fread(&g->edges, sizeof(g->edges), 1, f);
+  if (cnt != 1)
+  {
+    fprintf(stderr, "ERROR: failed to read edges\n\n");
+    exit(-1);
+  }
+  if ((g->nodes < 1) || (g->edges < 0))
+  {
+    fprintf(stderr, "ERROR: node or edge count too low\n\n");
+    exit(-1);
+  }
 
-  g.nindex = (int*)malloc((g.nodes + 1) * sizeof(g.nindex[0]));
-  g.nlist = (int*)malloc(g.edges * sizeof(g.nlist[0]));
-  g.eweight = (int*)malloc(g.edges * sizeof(g.eweight[0]));
-  if ((g.nindex == NULL) || (g.nlist == NULL) || (g.eweight == NULL)) {fprintf(stderr, "ERROR: memory allocation failed\n\n");  exit(-1);}
+  g->nindex = (int *)malloc((g->nodes + 1) * sizeof(g->nindex[0]));
+  g->nlist = (int *)malloc(g->edges * sizeof(g->nlist[0]));
+  g->eweight = (int *)malloc(g->edges * sizeof(g->eweight[0]));
+  if ((g->nindex == NULL) || (g->nlist == NULL) || (g->eweight == NULL))
+  {
+    fprintf(stderr, "ERROR: memory allocation failed\n\n");
+    exit(-1);
+  }
 
-  cnt = fread(g.nindex, sizeof(g.nindex[0]), g.nodes + 1, f);  if (cnt != g.nodes + 1) {fprintf(stderr, "ERROR: failed to read neighbor index list\n\n");  exit(-1);}
-  cnt = fread(g.nlist, sizeof(g.nlist[0]), g.edges, f);  if (cnt != g.edges) {fprintf(stderr, "ERROR: failed to read neighbor list\n\n");  exit(-1);}
-  cnt = fread(g.eweight, sizeof(g.eweight[0]), g.edges, f);
-  if (cnt == 0) {
-    free(g.eweight);
-    g.eweight = NULL;
-  } else {
-    if (cnt != g.edges) {fprintf(stderr, "ERROR: failed to read edge weights\n\n");  exit(-1);}
+  cnt = fread(g->nindex, sizeof(g->nindex[0]), g->nodes + 1, f);
+  if (cnt != g->nodes + 1)
+  {
+    fprintf(stderr, "ERROR: failed to read neighbor index list\n\n");
+    exit(-1);
+  }
+  cnt = fread(g->nlist, sizeof(g->nlist[0]), g->edges, f);
+  if (cnt != g->edges)
+  {
+    fprintf(stderr, "ERROR: failed to read neighbor list\n\n");
+    exit(-1);
+  }
+  cnt = fread(g->eweight, sizeof(g->eweight[0]), g->edges, f);
+  if (cnt == 0)
+  {
+    free(g->eweight);
+    g->eweight = NULL;
+  }
+  else
+  {
+    if (cnt != g->edges)
+    {
+      fprintf(stderr, "ERROR: failed to read edge weights\n\n");
+      exit(-1);
+    }
   }
   fclose(f);
-  g.color = (int*)malloc(g.nodes * sizeof(g.color[0]));
+  g->color = (int *)malloc(g->nodes * sizeof(g->color[0]));
 
   return g;
 }
