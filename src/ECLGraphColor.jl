@@ -20,22 +20,28 @@ if (Base.Sys.islinux())
             nodes, edges))
     end
 
+    const dlsym_add_nlist = dlsym(_LIB, :add_nlist)
+
     function add_nlist(g::PECLgraph, row::T, serialnum::T, neighbor::T) where {T}
-        return ccall(dlsym(_LIB, :add_nlist),
+        return ccall(dlsym_add_nlist, 
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint, Cint),
             g.p, row, serialnum, neighbor)
     end
 
+    const dlsym_add_nindex = dlsym(_LIB, :add_nindex)
+
     function add_nindex(g::PECLgraph, row::T, idx::T) where {T}
-        return ccall(dlsym(_LIB, :add_nindex),
+        return ccall(dlsym_add_nindex,
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint),
             g.p, row, idx)
     end
 
+    const dlsym_get_color = dlsym(_LIB, :get_color)
+
     function get_color(g::PECLgraph, row::T) where {T}
-        return ccall(dlsym(_LIB, :get_color),
+        return ccall(dlsym_get_color, 
             Cint,
             (Ptr{Cvoid}, Cint),
             g.p, row)
