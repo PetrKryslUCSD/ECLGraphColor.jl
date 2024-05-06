@@ -300,6 +300,7 @@ extern "C"
         if (verbose){
             printf("ECL-GC OpenMP v1.2 (%s)\n", __FILE__);
             printf("Copyright 2020 Texas State University\n\n");
+            printf("# threads=%d\n\n", threads);
         }
 
         if (BPI != sizeof(int) * 8)
