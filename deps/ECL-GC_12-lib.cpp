@@ -501,6 +501,11 @@ extern "C"
         printf("\n");
     }
 
+    void write_graph(ECLgraph *g, char fname[])
+    {
+        writeECLgraph(*g, fname);
+    }
+
     void free_graph(ECLgraph *g)
     {
         free(g->nindex);
