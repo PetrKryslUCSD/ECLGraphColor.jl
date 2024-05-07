@@ -21,6 +21,10 @@ if (Base.Sys.islinux())
 
     const IntType = size_of_int() == 4 ? Int32 : Int64
 
+    function int_type()
+        return IntType
+    end
+
     function make_graph(nodes::T, edges::T) where {T}
         return PECLgraph(ccall(dlsym(_LIB, :make_graph),
             Ptr{Cvoid},
@@ -102,6 +106,10 @@ if (Base.Sys.islinux())
     end
 
 else # Not Linux: all functions are no ops
+
+    function int_type()
+        return Int
+    end
 
     function make_graph(nodes::T, edges::T) where {T}
         PECLgraph(Ptr{Cvoid}(0))
