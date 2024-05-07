@@ -44,7 +44,7 @@ if (Base.Sys.islinux())
         row::T, howmany::T, neighbors::Vector{IT}) where {T, IT<:IntType}
         return ccall(dlsym_add_nlist_all_row, 
             Cvoid,
-            (Ptr{Cvoid}, Cint, Cint, Cint),
+            (Ptr{Cvoid}, Cint, Cint, Ref{Cint}),
             g.p, IntType(row), IntType(howmany), neighbors)
     end
 
