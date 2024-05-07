@@ -104,6 +104,14 @@ else # Not Linux: all functions are no ops
     function print_graph(g::PECLgraph)
     end
 
+    function write_graph(g::PECLgraph, fname::String)
+    end
+
+    function read_graph(fname::String) 
+        PECLgraph(Ptr{Cvoid}(0))
+    end
+
+
     function free_graph(g::PECLgraph)
     end
 
