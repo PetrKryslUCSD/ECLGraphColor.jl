@@ -66,7 +66,7 @@ if (Base.Sys.islinux())
             g.p, IntType(row))
     end
 
-    function run_graph_coloring(g::PECLgraph, threads::T, test::T=0, verbose::T=0) where {T<:IntType}
+    function run_graph_coloring(g::PECLgraph, threads::T, test::T=0, verbose::T=0) where {T}
         return ccall(dlsym(_LIB, :run_graph_coloring),
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint, Cint,),
