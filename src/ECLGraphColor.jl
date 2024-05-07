@@ -13,11 +13,19 @@ if (Base.Sys.islinux())
     const _LIBDIR = joinpath(@__DIR__, "..", "deps")
     const _LIB = dlopen(joinpath(_LIBDIR, "ecl-gc") * ".so")
 
+    function size_of_int()
+        return ccall(dlsym(_LIB, :size_of_int),
+        Cint,
+        (),)
+    end
+
+    const IntType = size_of_int() == 4 ? Int32 : Int64
+
     function make_graph(nodes::T, edges::T) where {T}
         return PECLgraph(ccall(dlsym(_LIB, :make_graph),
             Ptr{Cvoid},
             (Cint, Cint),
-            nodes, edges))
+            IntType(nodes), IntType(edges)))
     end
 
     const dlsym_add_nlist = dlsym(_LIB, :add_nlist)
@@ -26,7 +34,18 @@ if (Base.Sys.islinux())
         return ccall(dlsym_add_nlist, 
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint, Cint),
-            g.p, row, serialnum, neighbor)
+            g.p, IntType(row), IntType(serialnum), IntType(neighbor))
+    end
+
+    # add_nlist_all_row(ECLgraph *g, int row, int howmany, int neighbors[])
+    const dlsym_add_nlist_all_row = dlsym(_LIB, :add_nlist_all_row)
+
+    function add_nlist_all_row(g::PECLgraph, 
+        row::T, howmany::T, neighbors::Vector{IT}) where {T, IT<:IntType}
+        return ccall(dlsym_add_nlist_all_row, 
+            Cvoid,
+            (Ptr{Cvoid}, Cint, Cint, Cint),
+            g.p, IntType(row), IntType(howmany), neighbors)
     end
 
     const dlsym_add_nindex = dlsym(_LIB, :add_nindex)
@@ -35,7 +54,7 @@ if (Base.Sys.islinux())
         return ccall(dlsym_add_nindex,
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint),
-            g.p, row, idx)
+            g.p, IntType(row), IntType(idx))
     end
 
     const dlsym_get_color = dlsym(_LIB, :get_color)
@@ -44,14 +63,14 @@ if (Base.Sys.islinux())
         return ccall(dlsym_get_color, 
             Cint,
             (Ptr{Cvoid}, Cint),
-            g.p, row)
+            g.p, IntType(row))
     end
 
-    function run_graph_coloring(g::PECLgraph, threads::T, test::T=0, verbose::T=0) where {T}
+    function run_graph_coloring(g::PECLgraph, threads::T, test::T=0, verbose::T=0) where {T<:IntType}
         return ccall(dlsym(_LIB, :run_graph_coloring),
             Cvoid,
             (Ptr{Cvoid}, Cint, Cint, Cint,),
-            g.p, threads, test, verbose)
+            g.p, IntType(threads), IntType(test), IntType(verbose))
     end
 
     function print_graph(g::PECLgraph)
@@ -89,6 +108,10 @@ else # Not Linux: all functions are no ops
     end
 
     function add_nlist(g::PECLgraph, row::T, serialnum::T, neighbor::T) where {T}
+    end
+
+    function add_nlist_all_row(g::PECLgraph, 
+        row::T, howmany::T, neighbors::Vector{IT<:IntType}) where {T}
     end
 
     function add_nindex(g::PECLgraph, row::T, idx::T) where {T}

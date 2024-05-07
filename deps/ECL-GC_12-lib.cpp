@@ -443,6 +443,42 @@ extern "C"
         }
     }
 
+    int size_of_int(void)
+    {
+        return sizeof(int);
+    }
+
+    // The numbers are 1-based
+    // Inside this function we assume 0-based indexing
+    void add_nlist_all_row(ECLgraph *g, int row, int howmany, int neighbors[])
+    {
+        row = row - 1;
+        if (g->nindex == (void *)0)
+        {
+            fprintf(stderr, "ERROR: no indexes\n\n");
+        }
+        else
+        {
+            if ((g->nindex[row] < 0) || (g->nindex[row] >= g->edges))
+            {
+                fprintf(stderr, "ERROR: wrong pointer to the row\n\n");
+            }
+            else
+            {
+                if (howmany != (g->nindex[row + 1] - g->nindex[row]))
+                {
+                    fprintf(stderr, "ERROR: too many or too few neighbors\n\n");
+                }
+                for (int j = 0; j < howmany; j++)
+                {
+                    int i = g->nindex[row] + j;
+                    g->nlist[i] = neighbors[j] - 1;
+                    g->eweight[i] = 1;
+                }
+            }
+        }
+    }
+
     // The numbers of the rows and indexes are 1-based
     // Inside this function we assume 0-based indexing
     void add_nindex(ECLgraph *g, int row, int idx)
