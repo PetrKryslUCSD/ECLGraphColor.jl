@@ -9,7 +9,7 @@ struct PECLgraph
     p::Ptr{Cvoid}
 end
 
-if (Base.Sys.islinux())
+if (Base.Sys.islinux()) || (Base.Sys.isapple()) # Linux or MacOS
     const _LIBDIR = joinpath(@__DIR__, "..", "deps")
     const _LIB = dlopen(joinpath(_LIBDIR, "ecl-gc") * ".so")
 
@@ -105,7 +105,7 @@ if (Base.Sys.islinux())
             g.p,)
     end
 
-else # Not Linux: all functions are no ops
+else # Not Linux or Apple: all functions are no ops
 
     function int_type()
         return Int
@@ -119,7 +119,7 @@ else # Not Linux: all functions are no ops
     end
 
     function add_nlist_all_row(g::PECLgraph, 
-        row::T, howmany::T, neighbors::Vector{IT<:IntType}) where {T}
+        row::T, howmany::T, neighbors::Vector{IT}) where {T, IT<:IntType}
     end
 
     function add_nindex(g::PECLgraph, row::T, idx::T) where {T}
