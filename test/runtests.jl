@@ -81,8 +81,8 @@ function test()
 
     true
 end
-if (!Base.Sys.islinux())
-    @warn "Architecture not supported (so far only Linux)."
+if !((Base.Sys.islinux()) || (Base.Sys.isapple())) # Linux or MacOS
+    @warn "Architecture not supported (so far only Linux or Apple)."
 else
     test()
 end

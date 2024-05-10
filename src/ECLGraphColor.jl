@@ -107,9 +107,17 @@ if (Base.Sys.islinux()) || (Base.Sys.isapple()) # Linux or MacOS
 
 else # Not Linux or Apple: all functions are no ops
 
-    function int_type()
-        return Int
+    # Assume 32-bit int as in the C++ library
+    
+    function size_of_int()
+        return 4  
     end
+
+    function int_type()
+        return Int32
+    end
+
+    const IntType = Int32 
 
     function make_graph(nodes::T, edges::T) where {T}
         PECLgraph(Ptr{Cvoid}(0))
